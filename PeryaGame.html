@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>🎡 Perya Card Game 🎴</title>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@600&display=swap" rel="stylesheet">
+  <style>
+    * {
+      box-sizing: border-box;
+      font-family: 'Poppins', sans-serif;
+    }
+
+    body {
+      background: radial-gradient(circle at top, #1a1a2e, #16213e);
+      color: #fff;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      margin: 0;
+    }
+
+    .game-container {
+      text-align: center;
+      background: rgba(255, 255, 255, 0.1);
+      padding: 30px;
+      border-radius: 20px;
+      box-shadow: 0 0 25px rgba(255, 255, 255, 0.2);
+      width: 380px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    h1 {
+      text-shadow: 0 0 10px #ff4d4d;
+    }
+
+    .card-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 10px;
+      margin: 20px 0;
+      position: relative;
+    }
+
+    .card {
+      background: #fff;
+      color: #000;
+      border-radius: 10px;
+      height: 80px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      font-size: 1.4em;
+      font-weight: bold;
+      cursor: pointer;
+      transition: transform 0.2s, box-shadow 0.3s;
+    }
+
+    .card:hover {
+      transform: scale(1.05);
+      box-shadow: 0 0 15px gold;
+    }
+
+    .selected {
+      box-shadow: 0 0 20px 5px gold;
+      transform: scale(1.1);
+    }
+
+    .ball {
+      width: 25px;
+      height: 25px;
+      border-radius: 50%;
+      background: radial-gradient(circle, #ff4d4d, #b30000);
+      position: absolute;
+      top: -50px;
+      left: 50%;
+      transform: translateX(-50%);
+      animation: bounce 2s ease-in-out infinite;
+      pointer-events: none;
+      display: none;
+    }
+
+    @keyframes bounce {
+      0% { transform: translateY(0); }
+      25% { transform: translateY(100px); }
+      50% { transform: translateY(0); }
+      75% { transform: translateY(60px); }
+      100% { transform: translateY(0); }
+    }
+
+    .result {
+      margin-top: 15px;
+      font-size: 1.1em;
+      text-shadow: 0 0 10px #00ffff;
+    }
+
+    button {
+      background: linear-gradient(135deg, #00ffff, #ff00ff);
+      border: none;
+      color: white;
+      padding: 10px 20px;
+      border-radius: 12px;
+      cursor: pointer;
+      font-weight: bold;
+      transition: transform 0.2s;
+    }
+
+    button:hover {
+      transform: scale(1.05);
+      box-shadow: 0 0 10px white;
+    }
+
+    .token-display {
+      position: absolute;
+      top: 15px;
+      right: 20px;
+      font-size: 1em;
+      color: gold;
+      text-shadow: 0 0 8px #ff0;
+    }
+
+    .glow {
+      box-shadow: 0 0 20px 8px gold !important;
+    }
+  </style>
+</head>
+<body>
+  <div class="game-container">
+    <h1>🎡 Perya Card Game 🎴</h1>
+    <div class="token-display" id="tokenDisplay">🎟 Tokens: 100</div>
+
+    <div class="card-grid" id="cardGrid">
+      <!-- Cards will be added dynamically -->
+    </div>
+
+    <button id="throwBtn">🎾 Throw Balls</button>
+    <div class="result" id="resultText">Choose a card to start!</div>
+
+    <div class="ball" id="ball1"></div>
+    <div class="ball" id="ball2"></div>
+    <div class="ball" id="ball3"></div>
+  </div>
+
+  <script>
+    const cards = [
+      "K♥", "Q♥", "J♥", "A♥",
+      "K♠", "Q♠", "J♠", "A♠"
+    ];
+
+    const cardGrid = document.getElementById("cardGrid");
+    const resultText = document.getElementById("resultText");
+    const throwBtn = document.getElementById("throwBtn");
+    const tokenDisplay = document.getElementById("tokenDisplay");
+    const balls = [document.getElementById("ball1"), document.getElementById("ball2"), document.getElementById("ball3")];
+
+    let chosenCard = null;
+    let tokens = 100;
+
+    // Create cards
+    cards.forEach(card => {
+      const div = document.createElement("div");
+      div.classList.add("card");
+      div.textContent = card;
+      div.addEventListener("click", () => selectCard(div, card));
+      cardGrid.appendChild(div);
+    });
+
+    function selectCard(element, card) {
+      document.querySelectorAll(".card").forEach(c => c.classList.remove("selected"));
+      element.classList.add("selected");
+      chosenCard = card;
+      resultText.textContent = `You chose ${card}! Click "Throw Balls" 🎯`;
+    }
+
+    throwBtn.addEventListener("click", throwBalls);
+
+    function throwBalls() {
+      if (!chosenCard) {
+        resultText.textContent = "⚠️ Choose a card first!";
+        return;
+      }
+
+      resultText.textContent = "🎾 Throwing balls...";
+      throwBtn.disabled = true;
+
+      let hits = [];
+
+      balls.forEach((ball, i) => {
+        setTimeout(() => {
+          ball.style.display = "block";
+          animateBall(ball, i);
+        }, i * 800);
+      });
+
+      setTimeout(() => {
+        for (let i = 0; i < 3; i++) {
+          const hitIndex = Math.floor(Math.random() * cards.length);
+          hits.push(cards[hitIndex]);
+          const cardEl = cardGrid.children[hitIndex];
+          cardEl.classList.add("glow");
+          setTimeout(() => cardEl.classList.remove("glow"), 1500);
+        }
+
+        const matchCount = hits.filter(c => c === chosenCard).length;
+        let msg = "";
+
+        if (matchCount === 3) {
+          msg = `🏆 JACKPOT! Triple ${chosenCard}! +50 tokens`;
+          tokens += 50;
+        } else if (matchCount === 2) {
+          msg = `🎉 Double hit on ${chosenCard}! +20 tokens`;
+          tokens += 20;
+        } else if (matchCount === 1) {
+          msg = `✅ One hit on ${chosenCard}! +5 tokens`;
+          tokens += 5;
+        } else {
+          msg = `😢 No ${chosenCard} this time. Try again!`;
+        }
+
+        tokenDisplay.textContent = `🎟 Tokens: ${tokens}`;
+        resultText.textContent = msg;
+        throwBtn.disabled = false;
+        balls.forEach(b => b.style.display = "none");
+      }, 5000);
+    }
+
+    function animateBall(ball, index) {
+      const gridRect = cardGrid.getBoundingClientRect();
+      const startX = Math.random() * (gridRect.width - 50);
+      let bounceCount = 0;
+      const totalBounces = 5 + Math.floor(Math.random() * 2);
+
+      ball.style.left = startX + "px";
+      ball.style.top = "-40px";
+      ball.style.animation = "none";
+
+      const bounceInterval = setInterval(() => {
+        bounceCount++;
+        const height = 50 + Math.random() * 120;
+        ball.animate([
+          { transform: `translateY(0)` },
+          { transform: `translateY(${height}px)` },
+          { transform: `translateY(0)` }
+        ], {
+          duration: 400,
+          easing: "ease-in-out"
+        });
+
+        if (bounceCount >= totalBounces) {
+          clearInterval(bounceInterval);
+          ball.style.display = "none";
+        }
+      }, 400);
+    }
+  </script>
+</body>
+</html>
